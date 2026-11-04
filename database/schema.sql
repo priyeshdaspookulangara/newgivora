@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     user_id INT NOT NULL,
     sender_id INT NULL,
     amount DECIMAL(10, 2) NOT NULL,
-    type ENUM('commission', 'withdrawal', 'purchase') NOT NULL,
+    type ENUM('commission', 'withdrawal', 'purchase', 'pin_generation') NOT NULL,
     level_depth INT NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_transactions_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -74,6 +74,24 @@ CREATE TABLE IF NOT EXISTS payouts (
     processed_at TIMESTAMP NULL DEFAULT NULL,
     CONSTRAINT fk_payouts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 7. e_pins table
+CREATE TABLE IF NOT EXISTS e_pins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pin_code VARCHAR(50) NOT NULL UNIQUE,
+    package_id INT NOT NULL,
+    generated_by INT NOT NULL,
+    used_by INT NULL DEFAULT NULL,
+    status ENUM('unused', 'used', 'cancelled') NOT NULL DEFAULT 'unused',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    used_at TIMESTAMP NULL DEFAULT NULL,
+    CONSTRAINT fk_epins_package FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE RESTRICT,
+    CONSTRAINT fk_epins_generated_by FOREIGN KEY (generated_by) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_epins_used_by FOREIGN KEY (used_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Update user_purchases to track pin_id or pin_code
+ALTER TABLE user_purchases ADD COLUMN pin_code VARCHAR(50) NULL DEFAULT NULL AFTER package_id;
 
 -- Seed Default Packages
 INSERT INTO packages (id, package_name, price, type, description, is_active) VALUES
