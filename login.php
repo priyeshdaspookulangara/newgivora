@@ -21,21 +21,29 @@ if (isAuthenticated()) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $password = trim($_POST['password'] ?? '');
 
     if (empty($username) || empty($password)) {
         $error = 'Please enter both username and password.';
     } else {
-        $user = authenticateUser($username, $password);
-        if ($user) {
-            if ($user['role'] === 'admin') {
-                header('Location: /admin/dashboard.php');
+        try {
+            $user = authenticateUser($username, $password);
+            if ($user) {
+                if ($user['role'] === 'admin') {
+                    header('Location: /admin/dashboard.php');
+                } else {
+                    header('Location: /member/dashboard.php');
+                }
+                exit;
             } else {
-                header('Location: /member/dashboard.php');
+                $error = 'Invalid username or password credentials.';
             }
-            exit;
-        } else {
-            $error = 'Invalid username or password credentials.';
+        } catch (PDOException $pdoEx) {
+            if ($pdoEx->getCode() === '42S02') {
+                $error = 'Database tables are not set up yet. Please visit <a href="/install.php" class="underline font-bold text-amber-300">install.php</a> to run the 1-click database setup.';
+            } else {
+                $error = 'Database error: ' . $pdoEx->getMessage();
+            }
         }
     }
 }
@@ -60,7 +68,7 @@ require_once __DIR__ . '/includes/header.php';
         <?php if (!empty($error)): ?>
             <div class="mb-6 p-3.5 rounded-xl bg-rose-950/70 border border-rose-500/40 text-rose-300 text-sm flex items-center space-x-2">
                 <i class="fa-solid fa-circle-exclamation text-rose-400"></i>
-                <span><?= e($error) ?></span>
+                <span><?= $error ?></span>
             </div>
         <?php endif; ?>
 
