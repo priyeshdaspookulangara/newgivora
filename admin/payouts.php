@@ -118,7 +118,7 @@ $pageTitle = 'Payouts & Withdrawal Approvals';
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+<div class="w-full space-y-8">
 
     <!-- Header -->
     <div class="glass-panel-gold rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border-l-4 border-l-amber-400">
