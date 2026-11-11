@@ -1,9 +1,10 @@
 <?php
 /**
  * ApexMLM One-Click Database Installer & Setup Wizard
- * Initializes tables and seed data automatically from database/schema.sql
+ * Initializes tables and seed data automatically into the configured database.
  */
 
+// Load config
 require_once __DIR__ . '/config.php';
 
 $message = '';
@@ -27,9 +28,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error)) {
         $error = "Schema file not found at: {$schemaFile}";
     } else {
         $sql = file_get_contents($schemaFile);
+
+        // Strip any 'CREATE DATABASE' and 'USE ...;' commands to prevent cPanel privilege errors
+        $sql = preg_replace('/CREATE\s+DATABASE\s+[^;]+;/i', '', $sql);
+        $sql = preg_replace('/USE\s+[^;]+;/i', '', $sql);
+
         try {
             $pdo->exec($sql);
-            $message = "Database tables and initial records installed successfully!";
+            $message = "Database tables and initial records installed successfully into '" . DB_NAME . "'!";
             $installed = true;
         } catch (PDOException $ex) {
             $error = "Installation error: " . $ex->getMessage();
@@ -93,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error)) {
         </div>
 
         <?php if (!$installed): ?>
-            <form method="POST" action="/install.php">
+            <form method="POST" action="">
                 <p class="text-xs text-slate-400 mb-4 text-center">
                     Click the button below to initialize all required database tables (`users`, `packages`, `wallets`, `e_pins`, `payouts`, etc.) and default seed accounts.
                 </p>
@@ -108,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($error)) {
                     <i class="fa-solid fa-right-to-bracket"></i>
                     <span>Go to Login Page</span>
                 </a>
-                <form method="POST" action="/install.php" onsubmit="return confirm('Warning: Re-running installer may reset seed data. Continue?');">
+                <form method="POST" action="" onsubmit="return confirm('Warning: Re-running installer may reset seed data. Continue?');">
                     <button type="submit" class="w-full py-2 px-3 text-xs text-slate-400 hover:text-rose-400 hover:bg-slate-900 rounded-lg transition text-center">
                         Re-run Installer (Reset Tables)
                     </button>
